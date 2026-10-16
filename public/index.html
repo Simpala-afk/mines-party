@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Сапёр на жадность — Охотники за кушем</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">💎</span>
+      <span class="brand-title">ОХОТНИКИ ЗА КУШЕМ</span>
+    </div>
+    <div class="topbar-meta" id="topbar-meta" hidden>
+      <span class="meta-badge" id="badge-room">КОД: -----</span>
+      <span class="meta-badge meta-round" id="badge-round">РАУНД 1/3</span>
+      <span class="meta-badge meta-target">ЦЕЛЬ: 3000</span>
+    </div>
+    <button class="btn-icon" id="btn-sound" title="Включить / выключить звук">🔊</button>
+  </header>
+
+  <!-- ВСПЛЫВАЮЩИЕ УВЕДОМЛЕНИЯ ОБ ОШИБКАХ -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="main-container">
+    <!-- ЭКРАН 1: ВХОД И СОЗДАНИЕ КОМНАТЫ -->
+    <section id="screen-auth" class="screen active">
+      <div class="card auth-card">
+        <div class="hero-badge">REAL-TIME ИГРА НА 3 ИГРОКОВ</div>
+        <h1 class="hero-title">Сапёр на жадность</h1>
+        <p class="hero-subtitle">
+          Вскрывай плитки, удваивай банк раунда и успей забрать куш раньше, чем нарвёшься на мину!
+        </p>
+
+        <div class="form-group">
+          <label for="input-name">Твой никнейм</label>
+          <input
+            type="text"
+            id="input-name"
+            maxlength="16"
+            placeholder="Например: Мирослав"
+            autocomplete="off"
+          />
+        </div>
+
+        <button id="btn-create-room" class="btn btn-primary btn-block">
+          🚀 Создать новую комнату
+        </button>
+
+        <div class="divider"><span>ИЛИ ВОЙТИ ПО КОДУ</span></div>
+
+        <div class="join-row">
+          <input
+            type="text"
+            id="input-room-code"
+            class="input-code"
+            maxlength="5"
+            placeholder="K7X9Q"
+            autocomplete="off"
+          />
+          <button id="btn-join-room" class="btn btn-secondary">
+            Войти
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЭКРАН 2: ЛОББИ ОЖИДАНИЯ (3 ИГРОКА) -->
+    <section id="screen-lobby" class="screen">
+      <div class="card lobby-card">
+        <div class="lobby-header">
+          <span class="lobby-label">КОД КОМНАТЫ ДЛЯ ДРУЗЕЙ</span>
+          <div class="room-code-box" id="lobby-code-box" title="Нажмите, чтобы скопировать">
+            <span id="lobby-room-code">-----</span>
+            <span class="copy-hint">📋 Копировать</span>
+          </div>
+        </div>
+
+        <div class="lobby-status-bar">
+          <span>Подключено охотников:</span>
+          <strong id="lobby-count-badge" class="count-pill">1/3</strong>
+        </div>
+
+        <div class="lobby-slots" id="lobby-slots">
+          <!-- Слоты 1, 2, 3 рендерятся из script.js -->
+        </div>
+
+        <div class="lobby-actions">
+          <button id="btn-start-game" class="btn btn-primary btn-block" disabled>
+            Ожидание 3 игроков (1/3)...
+          </button>
+          <p id="lobby-hint" class="lobby-hint">
+            Как только подключится 3-й игрок, создатель комнаты сможет запустить матч.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЭКРАН 3: ИГРОВОЕ ПОЛЕ -->
+    <section id="screen-game" class="screen">
+      <!-- КАРТОЧКИ 3 ИГРОКОВ -->
+      <div class="players-hud" id="players-hud">
+        <!-- Динамический рендер 3 карточек игроков -->
+      </div>
+
+      <!-- ИНДИКАТОР ТЕКУЩЕГО ХОДА -->
+      <div class="turn-banner" id="turn-banner">
+        Подготовка раунда...
+      </div>
+
+      <!-- СЕТКА 5x5 (25 ПЛИТОК) -->
+      <div class="board-wrapper">
+        <div class="board-grid" id="board-grid">
+          <!-- 25 плиток генерируются в script.js -->
+        </div>
+      </div>
+
+      <!-- ДВЕ БОЛЬШИЕ КНОПКИ ДЕЙСТВИЙ В СВОЙ ХОД -->
+      <div class="action-bar">
+        <button id="btn-risk" class="btn btn-risk" disabled>
+          <span class="btn-main-text">🎲 РИСКНУТЬ</span>
+          <span class="btn-sub-text">Тапни плитку или сюда (случайная)</span>
+        </button>
+        <button id="btn-bank" class="btn btn-bank" disabled>
+          <span class="btn-main-text">💰 ЗАБРАТЬ КУШ</span>
+          <span class="btn-sub-text" id="bank-btn-sub">Спасовать (+0)</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- КОМПАКТНЫЙ СВОРАЧИВАЕМЫЙ REAL-TIME ЧАТ -->
+  <aside id="chat-drawer" class="chat-drawer collapsed" hidden>
+    <div class="chat-header" id="chat-toggle">
+      <div class="chat-header-left">
+        <span class="chat-dot"></span>
+        <span class="chat-title">Лог охоты и чат</span>
+        <span id="chat-unread" class="chat-unread" hidden>0</span>
+      </div>
+      <button class="chat-chevron" id="chat-chevron" aria-label="Свернуть или развернуть чат">▲</button>
+    </div>
+
+    <div class="chat-body">
+      <div class="chat-messages" id="chat-messages"></div>
+      <form id="chat-form" class="chat-form">
+        <input
+          type="text"
+          id="chat-input"
+          maxlength="140"
+          placeholder="Написать сообщение..."
+          autocomplete="off"
+        />
+        <button type="submit" class="btn-send">➤</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ИТОГИ РАУНДА -->
+  <div id="modal-round" class="modal-backdrop" hidden>
+    <div class="modal-card">
+      <div class="modal-badge" id="round-modal-badge">РАУНД ЗАВЕРШЁН</div>
+      <h2 class="modal-title" id="round-modal-title">Итоги раунда 1</h2>
+      <p class="modal-desc">Все охотники зафиксировали куш или подорвались на минах.</p>
+      <div id="round-standings" class="standings-list"></div>
+      <button id="btn-next-round" class="btn btn-primary btn-block">
+        Следующий раунд ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО: ПОБЕДА В ИГРЕ -->
+  <div id="modal-gameover" class="modal-backdrop" hidden>
+    <div class="modal-card modal-victory">
+      <div class="victory-crown">👑</div>
+      <div class="modal-badge badge-gold" id="gameover-reason">ФИНАЛ ИГРЫ</div>
+      <h2 class="modal-title" id="gameover-winner">Победитель: ---</h2>
+      <div id="gameover-standings" class="standings-list"></div>
+      <button id="btn-restart-game" class="btn btn-primary btn-block">
+        🔄 Сыграть реванш
+      </button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
