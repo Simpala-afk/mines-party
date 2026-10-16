@@ -30,7 +30,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  padding-bottom: 56px; /* место под свёрнутую шапку чата */
+  padding-bottom: 56px;
 }
 
 /* ВЕРХНЯЯ ПАНЕЛЬ */
@@ -196,6 +196,43 @@ input[type="text"]:focus {
   text-align: center;
   letter-spacing: 0.18em;
   font-weight: 800;
+}
+
+/* ПЕРЕКЛЮЧАТЕЛЬ 2 ИЛИ 3 ИГРОКА */
+.mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #0b101d;
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.mode-option {
+  cursor: pointer;
+  margin: 0 !important;
+}
+
+.mode-option input {
+  display: none;
+}
+
+.mode-option span {
+  display: block;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.mode-option input:checked + span {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .divider {
@@ -365,10 +402,10 @@ input[type="text"]:focus {
   text-align: center;
 }
 
-/* HUD 3 ИГРОКОВ */
+/* HUD ИГРОКОВ (адаптивно под 2 или 3 человек) */
 .players-hud {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 8px;
 }
 
