@@ -28,7 +28,7 @@
     <!-- ЭКРАН 1: ВХОД И СОЗДАНИЕ КОМНАТЫ -->
     <section id="screen-auth" class="screen active">
       <div class="card auth-card">
-        <div class="hero-badge">REAL-TIME ИГРА НА 3 ИГРОКОВ</div>
+        <div class="hero-badge">REAL-TIME ИГРА НА 2–3 ИГРОКОВ</div>
         <h1 class="hero-title">Сапёр на жадность</h1>
         <p class="hero-subtitle">
           Вскрывай плитки, удваивай банк раунда и успей забрать куш раньше, чем нарвёшься на мину!
@@ -40,9 +40,23 @@
             type="text"
             id="input-name"
             maxlength="16"
-            placeholder="Поле ввода"
+            placeholder="Например: Мирослав"
             autocomplete="off"
           />
+        </div>
+
+        <div class="form-group">
+          <label>Количество игроков в комнате</label>
+          <div class="mode-switch">
+            <label class="mode-option">
+              <input type="radio" name="max-players" value="2" />
+              <span>👥 2 игрока</span>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="max-players" value="3" checked />
+              <span>🔥 3 игрока</span>
+            </label>
+          </div>
         </div>
 
         <button id="btn-create-room" class="btn btn-primary btn-block">
@@ -67,7 +81,7 @@
       </div>
     </section>
 
-    <!-- ЭКРАН 2: ЛОББИ ОЖИДАНИЯ (3 ИГРОКА) -->
+    <!-- ЭКРАН 2: ЛОББИ ОЖИДАНИЯ (2 ИЛИ 3 ИГРОКА) -->
     <section id="screen-lobby" class="screen">
       <div class="card lobby-card">
         <div class="lobby-header">
@@ -84,15 +98,15 @@
         </div>
 
         <div class="lobby-slots" id="lobby-slots">
-          <!-- Слоты 1, 2, 3 рендерятся из script.js -->
+          <!-- Слоты игроков рендерятся динамически из script.js -->
         </div>
 
         <div class="lobby-actions">
           <button id="btn-start-game" class="btn btn-primary btn-block" disabled>
-            Ожидание 3 игроков (1/3)...
+            Ожидание игроков...
           </button>
           <p id="lobby-hint" class="lobby-hint">
-            Как только подключится 3-й игрок, создатель комнаты сможет запустить матч.
+            Как только все игроки подключатся, создатель комнаты сможет запустить матч.
           </p>
         </div>
       </div>
@@ -100,9 +114,9 @@
 
     <!-- ЭКРАН 3: ИГРОВОЕ ПОЛЕ -->
     <section id="screen-game" class="screen">
-      <!-- КАРТОЧКИ 3 ИГРОКОВ -->
+      <!-- КАРТОЧКИ ИГРОКОВ (2 ИЛИ 3) -->
       <div class="players-hud" id="players-hud">
-        <!-- Динамический рендер 3 карточек игроков -->
+        <!-- Динамический рендер карточек игроков -->
       </div>
 
       <!-- ИНДИКАТОР ТЕКУЩЕГО ХОДА -->
