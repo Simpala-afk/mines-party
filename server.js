@@ -12,7 +12,6 @@ const io = new Server(server, {
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
-const MAX_PLAYERS = 3;
 const MAX_ROUNDS = 3;
 const TARGET_SCORE = 3000;
 
@@ -102,6 +101,7 @@ function getPublicRoomState(room, revealAll = false) {
     code: room.code,
     status: room.status, // 'LOBBY' | 'PLAYING' | 'ROUND_END' | 'GAME_OVER'
     hostId: room.hostId,
+    maxPlayers: room.maxPlayers,
     round: room.round,
     maxRounds: MAX_ROUNDS,
     targetScore: TARGET_SCORE,
@@ -256,7 +256,7 @@ function startNewRound(room, isFirstRound = false) {
     p.roundStatus = p.connected ? 'ACTIVE' : 'EXPLODED';
   });
 
-  // В 1-м раунде начинает Игрок 1, во 2-м — Игрок 2, в 3-м — Игрок 3
+  // Справедливая смена первого хода в каждом раунде
   room.turnIndex = (room.round - 1) % room.players.length;
   if (!room.players[room.turnIndex].connected) {
     const firstConnected = room.players.findIndex(p => p.connected);
@@ -274,14 +274,16 @@ function startNewRound(room, isFirstRound = false) {
 }
 
 io.on('connection', (socket) => {
-  // 1. Создание новой комнаты
-  socket.on('create_room', ({ playerName }) => {
+  // 1. Создание новой комнаты (с поддержкой выбора 2 или 3 игроков)
+  socket.on('create_room', ({ playerName, maxPlayers }) => {
     const cleanName = String(playerName || '').trim().slice(0, 18) || 'Игрок 1';
+    const targetPlayers = Number(maxPlayers) === 2 ? 2 : 3;
     const code = generateRoomCode();
 
     const room = {
       code,
       hostId: socket.id,
+      maxPlayers: targetPlayers,
       status: 'LOBBY',
       round: 1,
       turnIndex: 0,
@@ -305,7 +307,11 @@ io.on('connection', (socket) => {
 
     socket.emit('joined_room', { roomCode: code, playerId: socket.id });
     io.to(code).emit('room_state', getPublicRoomState(room));
-    sendSystemLog(code, `${cleanName} создал комнату ${code}. Ожидание охотников (1/3)...`, 'info');
+    sendSystemLog(
+      code,
+      `${cleanName} создал комнату ${code} (режим на ${room.maxPlayers} чел.). Ожидание (1/${room.maxPlayers})...`,
+      'info'
+    );
   });
 
   // 2. Вход в существующую комнату по коду
@@ -324,8 +330,8 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (room.players.length >= MAX_PLAYERS) {
-      socket.emit('error_msg', 'Комната уже заполнена (3/3)!');
+    if (room.players.length >= room.maxPlayers) {
+      socket.emit('error_msg', `Комната уже заполнена (${room.maxPlayers}/${room.maxPlayers})!`);
       return;
     }
 
@@ -346,12 +352,12 @@ io.on('connection', (socket) => {
     io.to(code).emit('room_state', getPublicRoomState(room));
     sendSystemLog(
       code,
-      `${cleanName} присоединился к лобби (${room.players.length}/${MAX_PLAYERS}).`,
+      `${cleanName} присоединился к лобби (${room.players.length}/${room.maxPlayers}).`,
       'info'
     );
   });
 
-  // 3. Запуск игры создателем комнаты (когда подключены 3 игрока)
+  // 3. Запуск игры создателем комнаты (когда подключены все выбранные игроки: 2/2 или 3/3)
   socket.on('start_game', () => {
     const code = socket.data.roomCode;
     const room = rooms.get(code);
@@ -362,8 +368,11 @@ io.on('connection', (socket) => {
       return;
     }
 
-    if (room.players.length < MAX_PLAYERS) {
-      socket.emit('error_msg', `Для старта необходимо 3 игрока (сейчас ${room.players.length}/3)!`);
+    if (room.players.length < room.maxPlayers) {
+      socket.emit(
+        'error_msg',
+        `Для старта нужно игроков: ${room.maxPlayers} (сейчас ${room.players.length}/${room.maxPlayers})!`
+      );
       return;
     }
 
@@ -448,7 +457,7 @@ io.on('connection', (socket) => {
       );
     }
 
-    // Синхронное событие анимации вскрытия плитки для всех трёх устройств
+    // Синхронное событие анимации вскрытия плитки для всех устройств
     io.to(code).emit('tile_opened', {
       index: tile.index,
       tile: {
@@ -566,7 +575,7 @@ io.on('connection', (socket) => {
       }
       sendSystemLog(
         code,
-        `${socket.data.playerName} покинул лобби (${room.players.length}/${MAX_PLAYERS}).`,
+        `${socket.data.playerName} покинул лобби (${room.players.length}/${room.maxPlayers}).`,
         'info'
       );
       io.to(code).emit('room_state', getPublicRoomState(room));
