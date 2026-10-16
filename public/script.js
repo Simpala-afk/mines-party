@@ -151,10 +151,13 @@ btnSound.addEventListener('click', () => {
   btnSound.textContent = soundEnabled ? '🔊' : '🔇';
 });
 
-// Создание и вход в комнату
+// Создание комнаты (с выбранным режимом на 2 или 3 человек) и вход по коду
 btnCreateRoom.addEventListener('click', () => {
   const playerName = inputName.value.trim() || 'Охотник';
-  socket.emit('create_room', { playerName });
+  const selectedMode = document.querySelector('input[name="max-players"]:checked');
+  const maxPlayers = selectedMode ? Number(selectedMode.value) : 3;
+
+  socket.emit('create_room', { playerName, maxPlayers });
 });
 
 btnJoinRoom.addEventListener('click', () => {
@@ -241,13 +244,14 @@ chatForm.addEventListener('submit', (e) => {
   chatInput.value = '';
 });
 
-// Рендер лобби ожидания
+// Рендер лобби ожидания (под 2 или 3 игроков)
 function renderLobby(state) {
+  const maxP = state.maxPlayers || 3;
   lobbyRoomCode.textContent = state.code;
-  lobbyCountBadge.textContent = `${state.players.length}/3`;
+  lobbyCountBadge.textContent = `${state.players.length}/${maxP}`;
 
   lobbySlots.innerHTML = '';
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < maxP; i++) {
     const player = state.players[i];
     const slot = document.createElement('div');
     slot.className = `slot-item ${player ? 'filled' : ''}`;
@@ -269,21 +273,21 @@ function renderLobby(state) {
   }
 
   const isHost = state.hostId === myPlayerId;
-  const fullLobby = state.players.length === 3;
+  const fullLobby = state.players.length === maxP;
 
   if (isHost) {
     btnStartGame.disabled = !fullLobby;
     btnStartGame.textContent = fullLobby
-      ? '🔥 НАЧАТЬ ИГРУ (3/3)'
-      : `Ожидание игроков (${state.players.length}/3)...`;
+      ? `🔥 НАЧАТЬ ИГРУ (${maxP}/${maxP})`
+      : `Ожидание игроков (${state.players.length}/${maxP})...`;
     lobbyHint.textContent = fullLobby
-      ? 'Все 3 игрока в сборе! Нажимайте «Начать игру».'
+      ? 'Все игроки в сборе! Нажимайте «Начать игру».'
       : 'Отправьте 5-значный код комнаты друзьям.';
   } else {
     btnStartGame.disabled = true;
     btnStartGame.textContent = fullLobby
       ? 'Ожидание запуска создателем комнаты...'
-      : `Ожидание игроков (${state.players.length}/3)...`;
+      : `Ожидание игроков (${state.players.length}/${maxP})...`;
     lobbyHint.textContent = 'Игру запускает создатель комнаты 👑.';
   }
 }
@@ -293,7 +297,7 @@ function renderGame(state) {
   badgeRoom.textContent = `КОД: ${state.code}`;
   badgeRound.textContent = `РАУНД ${state.round}/${state.maxRounds}`;
 
-  // 1. Рендер 3 карточек игроков
+  // 1. Рендер карточек игроков (2 или 3)
   playersHud.innerHTML = '';
   state.players.forEach(p => {
     const isCurrentTurn = state.status === 'PLAYING' && state.currentTurnPlayerId === p.id;
